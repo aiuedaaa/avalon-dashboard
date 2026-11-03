@@ -355,10 +355,10 @@
               <p class="text-[11px] font-bold text-cyan-200 flex items-center gap-1"><svg class="w-3.5 h-3.5 text-cyan-300" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6c0 4 6 10 6 10s6-6 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z"/></svg> 全体の中での立ち位置</p>
               <div class="flex gap-1 overflow-x-auto scrollbar-hide pb-0.5">
                 <button onclick="toggleScatterTier('all')" id="sc-tier-all" class="text-[9px] px-2 py-1 font-bold rounded transition border btn-active whitespace-nowrap">全員</button>
-                <button onclick="toggleScatterTier('20')" id="sc-tier-20" class="text-[9px] px-2 py-1 font-bold rounded transition border btn-inactive whitespace-nowrap">20M〜</button>
-                <button onclick="toggleScatterTier('15-20')" id="sc-tier-15-20" class="text-[9px] px-2 py-1 font-bold rounded transition border btn-inactive whitespace-nowrap">15-20M</button>
-                <button onclick="toggleScatterTier('10-15')" id="sc-tier-10-15" class="text-[9px] px-2 py-1 font-bold rounded transition border btn-inactive whitespace-nowrap">10-15M</button>
-                <button onclick="toggleScatterTier('0-10')" id="sc-tier-0-10" class="text-[9px] px-2 py-1 font-bold rounded transition border btn-inactive whitespace-nowrap">〜10M</button>
+                <button onclick="toggleScatterTier('40')" id="sc-tier-40" class="text-[9px] px-2 py-1 font-bold rounded transition border btn-inactive whitespace-nowrap">40M〜</button>
+                <button onclick="toggleScatterTier('30-40')" id="sc-tier-30-40" class="text-[9px] px-2 py-1 font-bold rounded transition border btn-inactive whitespace-nowrap">30-40M</button>
+                <button onclick="toggleScatterTier('20-30')" id="sc-tier-20-30" class="text-[9px] px-2 py-1 font-bold rounded transition border btn-inactive whitespace-nowrap">20-30M</button>
+                <button onclick="toggleScatterTier('0-20')" id="sc-tier-0-20" class="text-[9px] px-2 py-1 font-bold rounded transition border btn-inactive whitespace-nowrap">〜20M</button>
               </div>
             </div>
             <p class="text-[9px] text-indigo-200 pl-1 mb-2">※赤点線は<span class="text-white font-bold border-b border-cyan-300">上のフィルタで表示中の全員</span>から算出した目標基準です。Y軸は自動ズームされます。</p>
@@ -482,14 +482,23 @@
       if (Math.abs(num) >= 1e6) return (num / 1e6).toFixed(2) + 'M';
       return num.toLocaleString();
     }
+    function parseDateParts(dateStr) {
+      if (!dateStr) return new Date();
+      const parts = String(dateStr).split('-');
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+    function getDateDayOfWeek(dateStr) {
+      return parseDateParts(dateStr).getDay();
+    }
+
 
     function getTierCategory(power) {
-      if (power >= 2e7) return '20'; if (power >= 1.5e7) return '15-20'; if (power >= 1e7) return '10-15'; return '0-10';
+      if (power >= 4e7) return '40'; if (power >= 3e7) return '30-40'; if (power >= 2e7) return '20-30'; return '0-20';
     }
     function getTierTailwindClass(power, isButton = false) {
-      if (power >= 2e7) return isButton ? 'bg-orange-600/80 text-white border-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.4)]' : 'bg-orange-500/25 text-orange-200 border-orange-400/60';
-      if (power >= 1.5e7) return isButton ? 'bg-purple-600/80 text-white border-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.4)]' : 'bg-purple-500/25 text-purple-200 border-purple-400/60';
-      if (power >= 1e7) return isButton ? 'bg-cyan-600/80 text-white border-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'bg-cyan-500/25 text-cyan-200 border-cyan-400/60';
+      if (power >= 4e7) return isButton ? 'bg-orange-600/80 text-white border-orange-300 shadow-[0_0_10px_rgba(249,115,22,0.4)]' : 'bg-orange-500/25 text-orange-200 border-orange-400/60';
+      if (power >= 3e7) return isButton ? 'bg-purple-600/80 text-white border-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.4)]' : 'bg-purple-500/25 text-purple-200 border-purple-400/60';
+      if (power >= 2e7) return isButton ? 'bg-cyan-600/80 text-white border-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'bg-cyan-500/25 text-cyan-200 border-cyan-400/60';
       return isButton ? 'bg-emerald-600/80 text-white border-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 'bg-emerald-500/25 text-emerald-200 border-emerald-400/60';
     }
     function computeRanks(arr, key) {
@@ -516,7 +525,7 @@
     function initElderWeeks() {
       weekMap = {}; weeks = [];
       availableDates.forEach(dateStr => {
-        const d = new Date(dateStr); const day = d.getDay(); const startD = new Date(d); startD.setDate(d.getDate() - day);
+        const d = parseDateParts(dateStr); const day = d.getDay(); const startD = new Date(d); startD.setDate(d.getDate() - day);
         const startStr = startD.getFullYear() + '-' + String(startD.getMonth()+1).padStart(2,'0') + '-' + String(startD.getDate()).padStart(2,'0');
         if (!weekMap[startStr]) { weekMap[startStr] = { label: startStr.replace(/-/g,'/'), dates: [] }; weeks.push(startStr); }
         weekMap[startStr].dates.push(dateStr);
@@ -574,10 +583,10 @@
       if (tCont) {
         tCont.innerHTML = '';
         if (state.tab !== 'personal') {
-          [{ id: '20', l: '20M〜' }, { id: '15-20', l: '15〜20M' }, { id: '10-15', l: '10〜15M' }, { id: '0-10', l: '〜10M' }].forEach(t => {
+          [{ id: '40', l: '40M〜' }, { id: '30-40', l: '30〜40M' }, { id: '20-30', l: '20〜30M' }, { id: '0-20', l: '〜20M' }].forEach(t => {
             const ms = latestMemberInfo.filter(d => d.tierCat === t.id); if (ms.length === 0) return;
             const isOn = ms.some(d => globalFilterState[d.name]);
-            const cls = isOn ? getTierTailwindClass(t.id==='20'?2e7:t.id==='15-20'?1.5e7:1e7, true) : 'bg-indigo-950/60 text-slate-400 border-indigo-800 line-through opacity-60 hover:bg-indigo-900';
+            const cls = isOn ? getTierTailwindClass(t.id==='40'?4e7:t.id==='30-40'?3e7:2e7, true) : 'bg-indigo-950/60 text-slate-400 border-indigo-800 line-through opacity-60 hover:bg-indigo-900';
             tCont.insertAdjacentHTML('beforeend', `<button onclick="toggleTier('${t.id}')" class="flex-none px-3 py-1 text-[11px] font-bold rounded-md border transition ${cls}">${t.l}</button>`);
           });
         }
@@ -647,7 +656,7 @@
       updateScatterTierButtons(); renderPersonal(); pushHistoryState(); 
     }
     function updateScatterTierButtons() {
-      ['all','20','15-20','10-15','0-10'].forEach(t => { const b = document.getElementById(`sc-tier-${t}`); if(b) b.className = state.scatterTiers.includes(t) ? "text-[9px] px-2 py-1 font-bold rounded transition border btn-active whitespace-nowrap" : "text-[9px] px-2 py-1 font-bold rounded transition border btn-inactive whitespace-nowrap"; });
+      ['all','40','30-40','20-30','0-20'].forEach(t => { const b = document.getElementById(`sc-tier-${t}`); if(b) b.className = state.scatterTiers.includes(t) ? "text-[9px] px-2 py-1 font-bold rounded transition border btn-active whitespace-nowrap" : "text-[9px] px-2 py-1 font-bold rounded transition border btn-inactive whitespace-nowrap"; });
     }
 
     function updateStickyBadge() {
@@ -706,11 +715,11 @@
       const bossStr = isPersonal ? state.persBoss : (state.rankPeriod.startsWith('last-') ? state.rankBoss : 'all');
 
       if (!periodStr.startsWith('last-')) { 
-        vData = processedData.filter(d => d.date === periodStr).map(d => ({ name: d.name, powerNum: d.powerNum, scoreNum: d.scoreNum, efficiency: d.efficiency, diffScore: d.diffScore, tierCat: d.tierCat, isAvg: false, dailyRank: d.dailyRank, maxScoreNum: d.scoreNum, maxScoreDate: d.date, maxScoreBoss: new Date(d.date).getDay() }));
+        vData = processedData.filter(d => d.date === periodStr).map(d => ({ name: d.name, powerNum: d.powerNum, scoreNum: d.scoreNum, efficiency: d.efficiency, diffScore: d.diffScore, tierCat: d.tierCat, isAvg: false, dailyRank: d.dailyRank, maxScoreNum: d.scoreNum, maxScoreDate: d.date, maxScoreBoss: getDateDayOfWeek(d.date) }));
       } else {
         let days = parseInt(periodStr.split('-')[1]); const pastMs = new Date(availableDates[0]).getTime() - (days * 864e5);
         let tDates = availableDates.filter(d => new Date(d).getTime() > pastMs);
-        if (bossStr !== 'all') tDates = tDates.filter(d => new Date(d).getDay() == bossStr);
+        if (bossStr !== 'all') tDates = tDates.filter(d => getDateDayOfWeek(d) == bossStr);
         let tData = processedData.filter(d => tDates.includes(d.date));
         
         let minC = 1; if(bossStr==='all'){ minC = days===14?4:days===30?8:20; } else { minC = days>=30?2:1; }
@@ -719,7 +728,7 @@
           if (!agg[d.name]) agg[d.name] = { sSum: 0, pSum: 0, pCnt: 0, rSum: 0, cnt: 0, maxS: 0, maxD: '', maxB: 0 };
           agg[d.name].sSum += d.scoreNum; agg[d.name].rSum += d.dailyRank; agg[d.name].cnt++;
           if (d.powerNum > 0) { agg[d.name].pSum += d.powerNum; agg[d.name].pCnt++; }
-          if (d.scoreNum > agg[d.name].maxS) { agg[d.name].maxS = d.scoreNum; agg[d.name].maxD = d.date; agg[d.name].maxB = new Date(d.date).getDay(); }
+          if (d.scoreNum > agg[d.name].maxS) { agg[d.name].maxS = d.scoreNum; agg[d.name].maxD = d.date; agg[d.name].maxB = getDateDayOfWeek(d.date); }
         });
         Object.keys(agg).forEach(n => {
           const i = agg[n]; if (i.cnt >= minC) {
@@ -820,7 +829,7 @@
       
       let border3rd = 0;
       if (!isAllBoss) {
-        const tDate = validDates.find(d => new Date(d).getDay() === targetBossId);
+        const tDate = validDates.find(d => getDateDayOfWeek(d) === targetBossId);
         if(tDate) {
           const scores = processedData.filter(d=>d.date===tDate).map(d=>d.scoreNum).sort((a,b)=>b-a);
           border3rd = scores.length >= 3 ? scores[2] : (scores.length>0 ? scores[scores.length-1] : 0);
@@ -854,7 +863,7 @@
         const avg = allAvgsObj[name] || 0;
         if(avg > 0) {
           const bAvgs = [1,2,3,4,5,6,0].map(bid => {
-            const s = processedData.filter(d => d.name === name && validDates.includes(d.date) && new Date(d.date).getDay()===bid).map(d=>d.scoreNum);
+            const s = processedData.filter(d => d.name === name && validDates.includes(d.date) && getDateDayOfWeek(d.date)===bid).map(d=>d.scoreNum);
             return { id: bid, avg: s.length>0 ? s.reduce((a,b)=>a+b,0)/s.length : 0 };
           }).filter(x=>x.avg>0).sort((a,b)=>b.avg-a.avg);
           
@@ -876,11 +885,11 @@
             const tgtAvgObj = bAvgs.find(x=>x.id===targetBossId);
             tgtAvg = tgtAvgObj?.avg || 0;
             activeMembers.forEach(n => {
-              const s = processedData.filter(d => d.name === n && validDates.includes(d.date) && new Date(d.date).getDay()===targetBossId).map(d=>d.scoreNum);
+              const s = processedData.filter(d => d.name === n && validDates.includes(d.date) && getDateDayOfWeek(d.date)===targetBossId).map(d=>d.scoreNum);
               const nAvg = s.length>0 ? s.reduce((a,b)=>a+b,0)/s.length : 0;
               if(nAvg > tgtAvg) tgtRank++;
             });
-            const prevRec = processedData.find(d => d.name===name && validDates.includes(d.date) && new Date(d.date).getDay()===targetBossId);
+            const prevRec = processedData.find(d => d.name===name && validDates.includes(d.date) && getDateDayOfWeek(d.date)===targetBossId);
             if(prevRec) {
               prevStr = formatValue(prevRec.scoreNum);
               if (tgtAvg > 0) {
@@ -895,8 +904,8 @@
           let trendStr = '-';
           if (name === baseName) trendStr = '<span class="text-cyan-300 font-bold">基準メンバー</span>';
           else {
-            let dBase = processedData.filter(d=>d.name===baseName && (isAllBoss || new Date(d.date).getDay()===targetBossId)).sort((a,b)=>new Date(a.date)-new Date(b.date));
-            let dTarget = processedData.filter(d=>d.name===name && (isAllBoss || new Date(d.date).getDay()===targetBossId)).sort((a,b)=>new Date(a.date)-new Date(b.date));
+            let dBase = processedData.filter(d=>d.name===baseName && (isAllBoss || getDateDayOfWeek(d.date)===targetBossId)).sort((a,b)=>new Date(a.date)-new Date(b.date));
+            let dTarget = processedData.filter(d=>d.name===name && (isAllBoss || getDateDayOfWeek(d.date)===targetBossId)).sort((a,b)=>new Date(a.date)-new Date(b.date));
             if(dBase.length>=2 && dTarget.length>=2) {
               let regB = calculateRegressionLine(dBase.map((d,idx)=>({x:idx, y:d.scoreNum/1e12})));
               let regT = calculateRegressionLine(dTarget.map((d,idx)=>({x:idx, y:d.scoreNum/1e12})));
@@ -1001,22 +1010,22 @@
         if (charts.scatterPers) charts.scatterPers.destroy();
         charts.scatterPers = new Chart(document.getElementById('scatterChartPersonal').getContext('2d'), { 
           type: 'scatter', data: { datasets: [{ data: pts, backgroundColor: (c)=>c.raw?c.raw.color:'#000', pointRadius: (c)=>c.raw&&c.raw.isSelected?8:3.5, pointBorderColor: (c)=>c.raw&&c.raw.isSelected?'#fff':'transparent', pointBorderWidth: (c)=>c.raw&&c.raw.isSelected?2:0, pointHoverRadius: (c)=>c.raw&&c.raw.isSelected?12:5 }] }, 
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false}, annotation: {annotations:anno}, datalabels: { display: (c)=>c.dataset.data[c.dataIndex].isSelected, align: 'top', color: '#fff', font:{size:11, family:'Noto Sans JP', weight:'bold'}, formatter: v=>v.name }, tooltip: { callbacks: { label: (ctx)=>formatValue(ctx.raw.y * 1e12), title: (ctx)=>ctx[0].raw.name } } }, scales: { x: { title:{display:true, text:'戦力 (M)', color:'#e0e7ff', font:{size:10}}, grid:{color:'rgba(192,132,252,0.18)'}, ticks:{color:'#cbd5e1'} }, y: { min: yMin, max: yMax, title:{display:true, text:'スコア (T)', color:'#e0e7ff', font:{size:10}}, grid:{color:'rgba(192,132,252,0.18)'}, ticks:{color:'#cbd5e1'} } } } 
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false}, annotation: {annotations:anno}, datalabels: { display: (c)=>c.dataset.data[c.dataIndex].isSelected, align: 'top', color: '#fff', font:{size:11, family:'Noto Sans JP', weight:'bold'}, formatter: v=>v.name }, tooltip: { callbacks: { label: (ctx)=>formatValue(ctx.raw.y * 1e12), title: (ctx)=>ctx[0].raw.name } } }, scales: { x: { title:{display:true, text:'戦力 (M)', color:'#e0e7ff', font:{size:10}}, grid:{color:'rgba(192,132,252,0.18)'}, ticks:{color:'#cbd5e1'} }, y: { min: yMin, max: yMax, title:{display:true, text:'スコア', color:'#e0e7ff', font:{size:10}}, grid:{color:'rgba(192,132,252,0.18)'}, ticks:{color:'#cbd5e1', callback: (v)=>formatValue(v * 1e12)} } } } 
         });
 
         if (tNames.length <= 5) {
           const radarData = tNames.map((name, i) => {
             const bossAvgs = [1,2,3,4,5,6,0].map(bossId => {
-              const scores = processedData.filter(d => d.name === name && validDates.includes(d.date) && new Date(d.date).getDay() == bossId).map(d => d.scoreNum);
+              const scores = processedData.filter(d => d.name === name && validDates.includes(d.date) && getDateDayOfWeek(d.date) == bossId).map(d => d.scoreNum);
               return scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/scores.length)/1e12 : 0;
             });
             const c = CHART_PALETTE[i % CHART_PALETTE.length]; return { label: name, data: bossAvgs, backgroundColor: c+'38', borderColor: c, pointBackgroundColor: c, borderWidth: 2 };
           });
           if (charts.radar) charts.radar.destroy();
-          charts.radar = new Chart(document.getElementById('radarChart').getContext('2d'), { type: 'radar', data: { labels: ['月(墓)','火(ド)','水(バ)','木(メ)','金(ス)','土(一)','日(鎌)'], datasets: radarData }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: 'rgba(255,255,255,0.22)' }, angleLines: { color: 'rgba(255,255,255,0.22)' }, pointLabels: { color: '#ffffff', font: { family: 'Noto Sans JP', size: 10, weight: 'bold' } }, ticks: { display: false } } }, plugins: { legend: { display: true, position: 'bottom', labels: { color: '#f1f5f9', font: {size:10, family:'Noto Sans JP'} } }, datalabels: { display: false } } } });
+          charts.radar = new Chart(document.getElementById('radarChart').getContext('2d'), { type: 'radar', data: { labels: ['月(墓)','火(ド)','水(バ)','木(メ)','金(ス)','土(一)','日(鎌)'], datasets: radarData }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: 'rgba(255,255,255,0.22)' }, angleLines: { color: 'rgba(255,255,255,0.22)' }, pointLabels: { color: '#ffffff', font: { family: 'Noto Sans JP', size: 10, weight: 'bold' } }, ticks: { display: false } } }, plugins: { legend: { display: true, position: 'bottom', labels: { color: '#f1f5f9', font: {size:10, family:'Noto Sans JP'} } }, datalabels: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatValue(ctx.raw * 1e12)}` } } } } });
         }
 
-        let chartDates = availableDates.filter(d => isAllBoss || new Date(d).getDay() === targetBossId).slice(0, 15);
+        let chartDates = availableDates.filter(d => isAllBoss || getDateDayOfWeek(d) === targetBossId).slice(0, 15);
         chartDates.reverse();
         const xLabels = chartDates.map(d=>d.substring(5).replace('-','/'));
         xLabels.push("来週予測", " ", " ", " "); 
@@ -1035,15 +1044,15 @@
         if (charts.trend) charts.trend.destroy();
         charts.trend = new Chart(document.getElementById('trendChart').getContext('2d'), {
           type: 'line', data: { labels: xLabels, datasets: tDatasets },
-          options: { responsive: true, maintainAspectRatio: false, layout: { padding: { right: 10 } }, interaction: { mode: 'index', intersect: false }, plugins: { legend: { display: false }, datalabels: { display: function(ctx){ const d=ctx.dataset.data; let i=d.length-1; while(i>=0&&d[i]===null)i--; return ctx.dataIndex===i; }, align: 'right', color: ctx=>ctx.dataset.borderColor, font: {size: 10, weight:'bold', family:'Noto Sans JP'}, formatter: (v,ctx)=>ctx.dataset.label } }, scales: { x: { grid:{color:'rgba(192,132,252,0.18)'}, ticks:{color:'#cbd5e1', font:{size:9}} }, y: { title:{display:true, text:'スコア (T)', color:'#e0e7ff', font:{size:10}}, grid:{color:'rgba(192,132,252,0.18)'}, ticks:{color:'#cbd5e1', font:{size:9}} } } }
+          options: { responsive: true, maintainAspectRatio: false, layout: { padding: { right: 10 } }, interaction: { mode: 'index', intersect: false }, plugins: { legend: { display: false }, datalabels: { display: function(ctx){ const d=ctx.dataset.data; let i=d.length-1; while(i>=0&&d[i]===null)i--; return ctx.dataIndex===i; }, align: 'right', color: ctx=>ctx.dataset.borderColor, font: {size: 10, weight:'bold', family:'Noto Sans JP'}, formatter: (v,ctx)=>ctx.dataset.label }, tooltip: { callbacks: { label: (ctx) => ctx.raw !== null && ctx.raw !== undefined ? `${ctx.dataset.label}: ${formatValue(ctx.raw * 1e12)}` : '' } } }, scales: { x: { grid:{color:'rgba(192,132,252,0.18)'}, ticks:{color:'#cbd5e1', font:{size:9}} }, y: { title:{display:true, text:'スコア', color:'#e0e7ff', font:{size:10}}, grid:{color:'rgba(192,132,252,0.18)'}, ticks:{color:'#cbd5e1', font:{size:9}, callback: (v)=>formatValue(v * 1e12)} } } }
         });
       }
 
-      let tData = processedData.filter(d => tNames.includes(d.name) && (isAllBoss || new Date(d.date).getDay() === targetBossId));
+      let tData = processedData.filter(d => tNames.includes(d.name) && (isAllBoss || getDateDayOfWeek(d.date) === targetBossId));
       if(tData.length > 0) {
         tData.forEach(d => {
           const cIndex = tNames.indexOf(d.name); const dotColor = tNames.length <= 10 ? CHART_PALETTE[cIndex % CHART_PALETTE.length] : '#cbd5e1';
-          let localDow = ['日','月','火','水','木','金','土'][new Date(d.date).getDay()];
+          let localDow = ['日','月','火','水','木','金','土'][getDateDayOfWeek(d.date)];
           listEl.insertAdjacentHTML('beforeend', `
             <li class="grid grid-cols-5 text-center items-center py-2.5 border-b border-purple-300/20 hover:bg-indigo-800/40">
               <div class="text-[10px] text-white font-bold leading-tight relative num-font">
