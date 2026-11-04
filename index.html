@@ -482,13 +482,6 @@
       if (Math.abs(num) >= 1e6) return (num / 1e6).toFixed(2) + 'M';
       return num.toLocaleString();
     }
-    function avCalendarDates(dates, days) {
-      if (!dates.length) return [];
-      const end = parseDateParts(dates[0]);
-      const start = new Date(end); start.setDate(start.getDate() - (days - 1));
-      return dates.filter(d => { const date = parseDateParts(d); return date >= start && date <= end; });
-    }
-
     function parseDateParts(dateStr) {
       if (!dateStr) return new Date();
       const parts = String(dateStr).split('-');
@@ -842,7 +835,7 @@
           border3rd = scores.length >= 3 ? scores[2] : (scores.length>0 ? scores[scores.length-1] : 0);
         }
       } else {
-        const past7Dates = avCalendarDates(availableDates, 7);
+        const past7Dates = availableDates.slice(0, 7);
         const p7Avgs = [];
         activeMembers.forEach(n => {
           let s7 = processedData.filter(d => d.name===n && past7Dates.includes(d.date)).map(d=>d.scoreNum);
@@ -882,11 +875,11 @@
           
           if (isAllBoss) {
             tgtAvg = avg; tgtRank = myRank;
-            const past7Dates = avCalendarDates(availableDates, 7);
+            const past7Dates = availableDates.slice(0, 7);
             const my7d = processedData.filter(d => d.name === name && past7Dates.includes(d.date));
             if (my7d.length > 0) {
               const p7a = my7d.reduce((a,b)=>a+b.scoreNum,0)/my7d.length;
-              prevStr = formatValue(p7a) + `<span class="block text-[9px] font-normal">記録 ${new Set(my7d.map(d=>d.date)).size}/7日</span>`;
+              prevStr = formatValue(p7a);
             }
           } else {
             const tgtAvgObj = bAvgs.find(x=>x.id===targetBossId);
@@ -954,7 +947,7 @@
       document.getElementById('diagnostic-title').innerHTML = `🎯 <span class="text-cyan-200 border-b border-cyan-300 px-1">${baseName}</span> の個別レポート`;
       
       const sec1Title = isAllBoss ? `👑 全ボスの総合分析` : `👑 指定ボス（${dowStr}曜・${targetBossName}）の分析`;
-      const row1Title = isAllBoss ? `直近7日間の平均<br><span class="text-[9px] font-normal">${(() => { const d=parseDateParts(availableDates[0]); d.setDate(d.getDate()-6); return (d.getMonth()+1)+'/'+d.getDate(); })()}～${availableDates[0].slice(5).replace('-', '/')}</span>` : `先週の結果`;
+      const row1Title = isAllBoss ? `直近7日間の平均` : `先週の結果`;
       const sec2Html = isAllBoss ? '' : `<tr><td colspan="${tNames.length+1}" class="bg-[#2a246c] p-1.5 pl-2 font-bold text-cyan-200 text-[11px] sm:text-xs border-t border-purple-300/35">📊 総合分析 (全ボス)</td></tr>
         <tr class="border-b border-purple-300/20"><td class="p-2 text-indigo-100 sticky-col bg-[#1c1948]">全ボス平均 <span class="text-[9px] font-normal">(全体順位)</span></td>${htmlAvg}</tr>
         <tr class="border-b border-purple-300/20"><td class="p-2 text-indigo-200 sticky-col bg-[#1c1948]">得意ボス</td>${htmlBest}</tr>
